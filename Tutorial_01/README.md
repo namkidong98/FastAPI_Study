@@ -2,7 +2,7 @@
 
 ## Python Version 확인 & 가상 환경 설정
 
-<img width="500" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/627d9ece-dbc2-49dd-8e06-abbf8b3b66fe">   
+<img width="600" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/627d9ece-dbc2-49dd-8e06-abbf8b3b66fe">   
 
 ```
 python -m venv env     # 현재 디렉토리에 env라는 이름의 가상 환경이 생성
@@ -13,7 +13,7 @@ python -m venv env     # 현재 디렉토리에 env라는 이름의 가상 환�
 
 ## requirements.txt & install
 
-<img width="500" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/98fb4ead-7f5d-46b7-b68c-cc95eb61bbbc">
+<img width="600" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/98fb4ead-7f5d-46b7-b68c-cc95eb61bbbc">
 
 - fastapi와 uvicorn을 requirements.txt에 포함하고 다음 명령어를 실행시킨다
 
@@ -56,6 +56,49 @@ async def root():
 
 ## HTTP 메소드와 REST API
 
+- GET : 리소스를 조회하기 위해 사용되는 메서드, 주로 데이터를 가져오는 데 사용
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int):
+    return {"item_id": item_id}
+```
+
+- POST : 리소스를 생성하기 위해 사용되는 메서드, 클라이언트가 서버로 데이터를 전송하여 새로운 리소스를 만들 때 사용
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.post("/items/")
+def create_item(item: dict):
+    return item
+```
+
+- PUT : 리소스를 업데이트하기 위해 사용되는 메서드, 클라이언트가 서버로 데이터를 전송하여 기존 리소스를 업데이트할 때 사용
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.put("/items/{item_id}")
+def update_item(item_id: int, item: dict):
+    return {"item_id": item_id, "updated_item": item}
+```
+
+- DELETE : 리소스를 삭제하기 위해 사용되는 메서드, 주로 클라이언트가 특정 리소스를 제거하고자 할 때 사용
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.delete("/items/{item_id}")
+def delete_item(item_id: int):
+    return {"message": f"Item {item_id} has been deleted"}
+```
 
 <br> 
 
@@ -74,7 +117,7 @@ async def root():
 <img width="942" alt="스크린샷 2024-01-08 094637" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/c8b6d013-b342-4ff6-bc91-2f6eac2b7a4c">
 
 
-<br> 
+<br> <br> 
 
 
 ## 코드 순서에 따른 작동 방식의 차이
