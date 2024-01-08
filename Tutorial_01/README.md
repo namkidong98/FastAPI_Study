@@ -132,3 +132,30 @@ def delete_item(item_id: int):
 
 - 순서를 바꾸어 /users/me를 상위에 두면, me에 할당된 message가 출력되는 것을 확인할 수 있다
 
+<br><br>
+
+## REST Client PlugIn으로 테스트하기
+
+참고 사이트: https://m.blog.naver.com/pjt3591oo/221346544567
+
+- VSCode의 Extension에서 REST Client 플러그인을 install 한다
+- 다음과 같이 요청을 보내는 http 확장자의 요청 코드 파일을 생성한다
+
+```python
+POST http://127.0.0.1:8000 HTTP/1.1
+
+###
+GET http://127.0.0.1:8000 HTTP/1.1
+```
+
+- ###을 사용하여 요청들 사이의 구분을 지을 수 있다
+- 각각의 요청 코드 위에 'Send Request' 버튼이 활성화되고 이를 클릭함으로써 우측에 요청 결과를 확인할 수 있다
+
+- GET 요청
+<img width="600" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/891ae0e5-37b3-47c1-8686-9581d586be3e">
+
+- POST 요청
+<img width="600" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/a575c265-8cd5-40e2-bcc0-9234cca1f8d6">
+
+
+
