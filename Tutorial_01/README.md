@@ -106,15 +106,15 @@ def delete_item(item_id: int):
 
 - type이 int인 경우
   
-<img width="517" alt="스크린샷 2024-01-08 094650" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/0e501a91-4218-4294-b588-d3e009f15edd">
+<img width="517" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/0e501a91-4218-4294-b588-d3e009f15edd">
 
 - type이 str인 경우
 
-<img width="521" alt="스크린샷 2024-01-08 094717" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/0c62a7a6-76e3-4485-9f1a-48a0a23141d8">
+<img width="521" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/0c62a7a6-76e3-4485-9f1a-48a0a23141d8">
 
 - 해당하는 type이 없는 경우
 
-<img width="942" alt="스크린샷 2024-01-08 094637" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/c8b6d013-b342-4ff6-bc91-2f6eac2b7a4c">
+<img width="942" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/c8b6d013-b342-4ff6-bc91-2f6eac2b7a4c">
 
 
 <br> <br> 
