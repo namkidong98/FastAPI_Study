@@ -27,4 +27,24 @@
 <br>
 
 ## Part4 : Request Body
+- FastAPI에서 HTTP 요청의 본문을 나타내는 request body를 정의하는 방법은 Pydantic 모델을 사용하는 것이다
+- Pydantic 모델을 이용하면 데이터 모델의 구조를 정의하고 이를 통해 입력 데이터의 유효성을 검사할 수 있다
+
+<br>
+
+<img width="850" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/8eab0085-8499-461f-bb91-ce1378c237ca">
+<img width="400" alt="스크린샷 2024-01-09 111952" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/c1abb9bd-cefe-4fd5-8ca0-21130ad52e9d">
+
+- POST 메소드에 request body를 채움으로써 item_dict를 위와 같이 구체적으로 설정하여 생성(create)할 수 있다 
+
+<br>
+
+<img width="850" alt="스크린샷 2024-01-09 112547" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/679ed69e-8f8b-4981-bd6d-ec7ee302391b">
+<img width="400" alt="스크린샷 2024-01-09 112554" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/c4502004-0b62-4b16-a47c-ea392daf1ce8">
+
+- Path Parameter(item_id), Query Parameter(q), request body(Item)을 모두 활용한 예제이다
+
+<br>
+
+## Part5 : Query Parameters and String Validations
 
