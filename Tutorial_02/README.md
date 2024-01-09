@@ -57,6 +57,7 @@
 <br>
 
 <img width="992" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/3ef4b242-7ca3-48d1-92cd-3e4b15504dde">
+
 - 그러나 max_Length보다 긴 "foobarfoobarfoobarfoobar"을 주면 에러가 발생하는 것을 확인할 수 있다
 
 
@@ -73,5 +74,12 @@
 
 <br>
 
-- 
+<img width="860" alt="스크린샷 2024-01-09 121413" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/5adca5c2-0d5d-476e-9290-ae07b711b1cc">
+<img width="931" alt="스크린샷 2024-01-09 121622" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/5c708b35-dbd9-441c-b9c6-35ff1f592a3b">
+
+- str을 list의 원소의 타입으로 설정해놓으면, 위의 사진과 같이 결과가 나온다
+
+<br>
+
+
 
