@@ -47,4 +47,31 @@
 <br>
 
 ## Part5 : Query Parameters and String Validations
+- fastapi의 Query 객체를 통해 Query Parameters를 정의하고 검증하는데 사용할 수 있다
+
+<img width="707" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/e39af30e-df0a-40ec-9804-06be4a965251">
+<img width="422" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/276c89c9-04d4-4a32-ac51-3f862fe72887">
+
+- max_length인 10보다 작은 foobar를 query로 주면 문제 없이 query가 추가되고 반환되는 것을 확인할 수 있다
+
+<br>
+
+<img width="992" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/3ef4b242-7ca3-48d1-92cd-3e4b15504dde">
+- 그러나 max_Length보다 긴 "foobarfoobarfoobarfoobar"을 주면 에러가 발생하는 것을 확인할 수 있다
+
+
+<br>
+
+
+<img width="600" alt="스크린샷 2024-01-09 115402" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/ead9fe23-584d-4417-bfb3-3a485eebc48c">
+<img width="250" alt="스크린샷 2024-01-09 115450" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/cc4c1d12-1b54-4d86-97b1-4b34ff11abca">
+<img width="250" alt="스크린샷 2024-01-09 115501" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/dea2a74e-59f2-4f33-bec4-b89d903387a9">
+<img width="250" alt="스크린샷 2024-01-09 115522" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/1d5b057e-da54-4f8c-aadc-4c1581fe80a1">
+
+- regex를 통해 정규식을 통한 매칭 옵션을 부여하는 것도 가능하다
+- 'fixe'는 mismatch로, 'fixed query'는 max_length를 초과해서 에러가 발생하고 'fixedquery'는 모든 조건을 만족해서 값이 제대로 반환되는 것을 확인할 수 있다
+
+<br>
+
+- 
 
