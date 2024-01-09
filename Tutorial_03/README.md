@@ -56,3 +56,52 @@
 3. Request Body   : POST, PUT 등의 HTTP 메소드를 사용하여 데이터를 요청 본문(body)에 담아 서버로 전달, 주로 큰 양의 데이터나 구조화된 데이터를 전송할 때 사용
                     Body 객체를 사용하여 설정
 ```
+
+<br>
+
+## Part8 : Body - Field
+
+- embed=True : 요청의 본문에 있는 데이터가 JSON 객체로 감싸져 있는 경우, 해당 객체를 Pydantic 모델의 필드에 바로 매핑
+```python
+class Item(BaseModel):
+    name : str
+    
+@app.put("/part8/item/{item_id}")
+async def update_item(item_id : int, item : Item=Body(..., embed=True)):
+    results = {"item_id" : item_id, "item" : item}
+    return results
+```
+
+```json
+{
+  "item": {
+    "name": "string"
+  }
+}
+```
+
+- embed=True가 없는 경우(default로 False로 설정되어 있다)
+```python
+class Item(BaseModel):
+    name : str
+
+@app.put("/part8/item/{item_id}")
+async def update_item(item_id : int, item : Item=Body(...)):
+    results = {"item_id" : item_id, "item" : item}
+    return results
+```
+
+```json
+{
+  "name": "string"
+}
+```
+
+<br>
+
+- Field : Pydantic 모델의 각 필드에 대한 유효성 검사, 기본값 설정, 문서화 등을 세밀하게 제어
+- 다음의 옵션들을 사용 가능 : '...'(기본값 없음), description(해당 필드에 대한 추가 설명), gt(초과), lt(미만)
+
+<img width="750" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/b0d748df-6864-4c96-b185-40a393b7be4b">
+
+- Request Body의 example의 schema를 확인해보면 description에서 설정한 max_length, price의 description, gt 등의 옵션이 반영된 것을 확인할 수 있다
