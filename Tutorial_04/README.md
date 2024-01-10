@@ -246,4 +246,20 @@ uuid4()
 
 ## Part12: Cookie and Header Parameters
 
+<img width="750" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/9d17b240-938a-4651-8ffc-adb4ffbb5b82">
+
+- Header와 Cookie를 import하고 해당 객체로 만드는 예제를 확인해볼 수 있다
+- x_token을 list로 만드는 과정에서 Optional이 쓰이면 Swagger UI(docs)에서 array가 활성화되지 않는 오류가 확인된다.
+- 또한 Optional을 제외하고 list나 List를 이용하여 array를 만들었을 때 response body에서 "string1,string2"와 같이 나오는게 맞는지 잘 모르겠다...
+```python
+{
+  "cookie_id": null,
+  "Accept-Encoding": "gzip, deflate, br",
+  "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "X-Token values": [
+    "string1,string2"        # 왜 안 구분되고 따옴표 안에 묶여서 나오지...?
+  ]
+}
+```
 
