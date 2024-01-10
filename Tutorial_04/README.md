@@ -203,11 +203,47 @@ async def update_item(
 
 ## Part11: Extra Data Types
 
+- datetime과 UUID를 새로운 데이터 타입으로 시도한 예제를 아래와 같이 볼 수 있다
+- UUID는 128비트의 고유한 식별자를 나타내는 데이터 타입이다
 
-
-
+<img width="850" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/b8af53c5-c981-4e50-82d0-aead71d940f9">
 
 <br>
 
-## Part12: 
+- datetime을 그대로 쓰면 Query Parameter로 인식하고 이렇게 되면 URL에 해당 정보가 드러나게 된다
+- 만약 이를 원하지 않는다면, Body 객체로 선언하여 Request Body로 만들어서 URL에 드러나지 않도록 만들 수 있다
+
+<img width="850" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/f0859d29-a6a8-402e-b62d-63452ddf4a82">
+
+<br><br>
+
+<img width="850" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/916a7d33-dfc8-46c0-8a7e-e47882929822">
+
+- UUID는 아래의 명령어를 이용하여 얻을 수 있다
+
+```
+python
+import uuid
+from uuid import uuid4
+uuid4()
+# output : UUID('95330595-85c9-407d-9172-4f04a53b5c8e')
+```
+- UUID를 item_id로 넣고 예제로 나온 request body를 입력하면 아래와 같은 결과를 얻을 수 있다
+
+```python
+{
+  "item_id": "95330595-85c9-407d-9172-4f04a53b5c8e",
+  "start_date": "2024-01-10T04:39:46.882000+00:00",
+  "end_date": "2024-01-10T04:39:46.882000+00:00",
+  "repeat_at": "04:39:46.882000+00:00",
+  "process_after": 259200,
+  "start_process": "2024-01-13T04:39:46.882000+00:00",
+  "duration": -259200
+}
+```
+
+<br>
+
+## Part12: Cookie and Header Parameters
+
 
