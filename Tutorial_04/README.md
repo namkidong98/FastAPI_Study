@@ -263,3 +263,8 @@ uuid4()
 }
 ```
 
+<br>
+
+<img width="692" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/63913df5-d835-4f41-9cf4-fd684c6316fb">
+
+- http 파일을 이용한 request에서도 동일한 결과가 나오는데...? 리스트 안에서 하나의 따옴표로 묶여 있어서 단일 원소로 인식하고 있는 듯 하다
