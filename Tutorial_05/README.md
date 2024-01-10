@@ -1,5 +1,167 @@
 ## Part13 : Response Model
 
+<img width="850" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/71a00e59-adf8-4e22-88de-a0f9f485878f">
 
+- response_model을 따로 설정하지 않고 UserBase로 request body인 user를 설정하고 user을 반환하면 password도 공개되는 문제가 생긴다
+- 이를 해결하고자 UserBase를 상속받는 UserIn과 UserOut을 만드는데, UserIn에만 password를 추가한다
+- 그렇게 하면 입력은 UserIn으로 받되 response_model을 UserOut으로 해서 출력되는 response body에는 password가 생략될 수 있다
+
+<br>
+
+```python
+class Item(BaseModel):
+    name : str
+    description : Optional[str] = None
+    price : float
+    tax : Optional[float] = None
+    tags : list[str] = []
+
+items = {
+    "foo" : {"name" : "Foo", "price" : 50.2},
+    "bar" : {"name" : "Bar", "description" : "The bartenders", "price" : 2, "tax" : 20.2},
+    "baz" : {"name" : "Baz", "description" : None, "price" : 50.2, "tax" : 10.5, "tags" : []}
+}
+
+@app.get("/items/", response_model=Item, response_model_exclude_unset=True)
+async def read_item(item_id : Literal["foo", "bar", "baz"]):
+    return items[item_id]
+```
+
+- 우선 Literal을 사용해서 foo, bar, baz 중 하나만 item_id(Query)로 받을 수 있게 제한한다
+- 셋 중 하나를 받으면 위에서 선언한 items 딕셔너리의 key로 사용해서 value를 반환하게 한다
+
+<br>
+
+### response_model_exclude_unset 옵션
+
+- 이 때 response_model_exclude_unset = True 옵션을 쓰면, items에 있는 그대로, 즉 없는 Field에 대해서는 생략하고 출력이 나온다
+```json
+##---------response_model_exclude_unset=True인 경우----------##
+# 1. item_id == "foo"에 대한 output
+{
+  "name": "Foo",
+  "price": 50.2
+}
+
+# 2. item_id == "bar"에 대한 output
+{
+  "name": "Bar",
+  "description": "The bartenders",
+  "price": 2,
+  "tax": 20.2
+}
+
+# 3. item_id == "baz"에 대한 output
+{
+  "name": "Baz",
+  "description": null,
+  "price": 50.2,
+  "tax": 10.5,
+  "tags": []
+}
+```
+
+<br>
+
+- 그러나 해당 옵션이 없다면 items에 있는 값들에 해당하는 부분만 업데이트된, Item의 전체 Field가 반환된다
+```json
+##---------response_model_exclude_unset가 없는 경우----------##
+# 1. item_id == "foo"에 대한 output
+{
+  "name": "Foo",
+  "description": null,
+  "price": 50.2,
+  "tax": null,
+  "tags": []
+}
+
+# 2. item_id == "bar"에 대한 output
+{
+  "name": "Bar",
+  "description": "The bartenders",
+  "price": 2,
+  "tax": 20.2,
+  "tags": []
+}
+
+# 3. item_id == "baz"에 대한 output
+{
+  "name": "Baz",
+  "description": null,
+  "price": 50.2,
+  "tax": 10.5,
+  "tags": []
+}
+```
+### response_model_include 옵션
+```python
+@app.get("/items/{item_id}/name", response_model=Item, response_model_include={"name", "description"})
+async def read_item_name(item_id : Literal["foo", "bar", "baz"]):
+    return items[item_id]
+```
+
+- response_model_include로 name과 description를 주었으므로, item_id에 해당하는 items의 value에서 update할 부분을 하고
+- 전체 Item의 Field 중 name과 description만 반환하는 구조이다
+
+```json
+##---------response_model_include 예제 ----------##
+# 1. item_id == "foo"에 대한 output
+{
+  "name": "Foo",
+  "description": null
+}
+
+# 2. item_id == "bar"에 대한 output
+{
+  "name": "Bar",
+  "description": "The bartenders"
+}
+
+# 3. item_id == "baz"에 대한 output
+{
+  "name": "Baz",
+  "description": null
+}
+```
+
+### response_model_exclude 옵션
+
+```python
+@app.get("/items/{item_id}/public", response_model=Item, response_model_exclude={"tax"})
+async def read_items_public_data(item_id : Literal["foo", "bar", "baz"]):
+    return items[item_id]
+```
+
+- response_model_exclude로 tax를 주었으므로, item_id에 해당하는 items의 value에서 update할 부분을 하고
+- 전체 Item의 Field 중 tax를 제외한, 즉 name, description, price, tags를 반환하는 구조이다
+
+```json
+##---------response_model_exclude 예제 ----------##
+# 1. item_id == "foo"에 대한 output
+{
+  "name": "Foo",
+  "description": null,
+  "price": 50.2,
+  "tags": []
+}
+
+# 2. item_id == "bar"에 대한 output
+{
+  "name": "Bar",
+  "description": "The bartenders",
+  "price": 2,
+  "tags": []
+}
+
+# 3. item_id == "baz"에 대한 output
+{
+  "name": "Baz",
+  "description": null,
+  "price": 50.2,
+  "tags": []
+}
+```
+
+<br><br>
 
 ## Part14 : Extra Models
