@@ -165,3 +165,16 @@ async def read_items_public_data(item_id : Literal["foo", "bar", "baz"]):
 <br><br>
 
 ## Part14 : Extra Models
+
+<img width="450" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/4b7ea085-7382-4111-a9cc-bd97257789bf">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/84c7ae0c-3fc6-4ed8-bfad-90ae62ca052b">
+<img width="750" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/f72ebcd8-29ea-43f7-9d41-9e0c440daf03">
+
+- UserBase를 바탕으로 USerIn, UserOut에 이어 UserInDB를 추가했다
+- UserInDB는 hased_password가 추가된 것으로 fake_save_user에서 fake_password_hasher 함수로 만들어진 hased_password를 포함한다
+- response_model이 UserOut이기 때문에 username, email, full_name만 있는 것을 확인할 수 있다
+- user_saved 자체는 UserInDB 객체이므로 hashed_password를 갖고 있어서 terminal에 출력된 부분에서 확인할 수 있다   
+  cf) BaseModel에서 .dict() 메소드는 권장하지 않고 대신 model_dump()를 사용하면 된다
+
+<br>
+
