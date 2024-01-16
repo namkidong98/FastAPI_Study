@@ -47,4 +47,11 @@
 
 - 나아가 list를 사용하여 다중 파일 업로드를 위와 같이 사용할 수 있다
 
+<br>
+
 ## Part18 : Request Forms and Files
+
+<img width="9000" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/7a944ce0-4302-4abf-a083-2615167a105d">
+
+- 하나의 요청으로 데이터와 파일들을 받아야 할 경우, File과 Form 필드를 함께 사용할 수 있다
+- Body가 포함된 경우 Json이 아니라 File 등으로 인해 multipart/form-data의 형식으로 전송되는 것을 확인할 수 있다
