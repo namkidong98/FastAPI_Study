@@ -178,3 +178,8 @@ async def read_items_public_data(item_id : Literal["foo", "bar", "baz"]):
 
 <br>
 
+<img width="750" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/6f4a7559-3c81-4ab3-a923-8947013cd0c5">
+
+- 우선 "str = "plane""과 같은 방식으로 해당 데이터 타입에 값을 지정할 수 있다
+- 또한 typing의 Union을 사용하여 response_model이 둘 중 하나의 응답 형태를 가질 수 있도록 설정할 수 있다
+- item2가 선택되자 plane 형식인 PlaneItem이 response_model로 선택되어 반환된 것을 확인할 수 있다
