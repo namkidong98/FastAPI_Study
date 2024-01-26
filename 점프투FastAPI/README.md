@@ -1,4 +1,4 @@
-# 1장. FastAPI 개발준비!
+<img width="682" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/a3f12bb0-b5de-4a53-a507-0642378f042b"># 1장. FastAPI 개발준비!
 
 ## 1. 파이썬 가상 환경 사용
 <img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/77d5d843-7513-4c96-873b-7399ab6b3512">
@@ -167,7 +167,10 @@ pip show sqlalchemy        # SQLAlchemy가 제대로 설치되었는지 확인
 
 pip install alembic        # models.py에 작성한 모델을 이용하여 테이블을 생성하고 변경할 수 있게 하는 라이브러리 설치
 alembic init migrations    # alembic 초기화 작업 수행
-
+# ./alembic.ini 수정
+# ./migrations/env.py 수정
+alembic revision --autogenerate    # 리비전 파일 생성
+alembic upgrade head               # 리비전 파일 실
 ```
 
 ### 모델을 이용해 테이블 자동으로 생성하기
@@ -180,7 +183,110 @@ alembic init migrations    # alembic 초기화 작업 수행
 
 <br>
 
+<img width="773" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/e64dd22a-9760-41b8-b9f9-d0a4b938191e">
+
+- alembic revision --autogenerate 를 통해 migrations/versions 하위에 리비전 파일을 생성한다
+- 리비전 파일은 py 확장자를 가지고 있는 파일로 무작위적으로 만들어지며, 테이블 생성 또는 변경하는 실행문들이 들어있다
+- 해당 명령어는 myapi(alembic init이 있는 가상 환경 메인 디렉토리)에서 실행해야 한다
+
+<br>
+
+<img width="468" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/b474bd25-cb90-47a6-933b-8190f5573a59">
+
+- alembic upgrade head로 리비전 파일을 실행하여 데이터 베이스 모델에 정의한 question과 answer라는 이름의 테이블을 생성한다
+- myapi/myapi.db라는 SQLite 데이터베이스 데이터 파일 형태로 생성되었을 것이다
+- 이를 살펴보기 위해 SQLite GUI 도구인 DB Browser for SQLite를 사용해야 한다
+
+<br>
+
+<img width="600" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/16e974cf-8a9e-4f01-ba84-11434e3cd5e7">
+<img width="300" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/b614d3f3-537d-4d9e-b3ae-ed9f856b0028">
+
+- https://sqlitebrowser.org/dl 에 접속하여 운영체제에 맞는 설치 파일을 내려받고 설치 중 shortcuts 옵션을 추가한다
+
+<br>
+
+<img width="700" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/2070f76c-84ac-4348-b3b5-ea0e0ecb70aa">
+<img width="700" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/a6f89197-88ca-4927-86f6-52998db2fc97">
+
+- 설치된 DB Browser for SQLite를 이용하여 myapi.db 파일을 열면 위와 같이 answer, question 테이블이 생성된 것을 확인할 수 있다
+- VSCode에서 "SQLite Viewer" Extension을 다운로드 하면 두 번째 사진과 같이 VSCode에서 myapi.db를 볼 수 있다
+
+<br>
+
 ## 3. 모델로 데이터 처리하기
+
+### 질문 저장하기
+
+<img width="686" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/5d591561-298d-426c-b162-5c898ea797d8">
+
+```
+from models import Question, Answer
+from datetime import datetime
+q = Question(subject='pybo가 무엇인가요?', content='pybo에 대해서 알고 싶습니다.', create_date=datetime.now())
+
+from database import SessionLocal
+db = SessionLocal()
+db.add(q)
+db.commit()
+q.id        # 출력 결과 : 1
+
+q = Question(subject='FastAPI 모델 질문입니다.', content='id는 자동으로 생성되나요?', create_date=datetime.now())
+db.add(q)
+db.commit()
+q.id        # 출력 결과 : 2
+```
+
+- commit : commit은 변경 사항을 db에 적용하는 것으로 일종의 결정 사인이고 그렇기 때문에 수행한 작업을 취소할 수 없다는 점을 유의해야 한다
+- rollback : 수행한 작업을 취소하는 역할로 commit 이전에 진행해야 한다
+
+<br>
+
+### 데이터 조회, 수정, 삭제
+
+<img width="534" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/f4072dca-3de6-49c6-a864-df5749cbe55a">
+
+```
+db.query(Question).all()    # Question 객체(질문)을 전부 조회
+db.query(Question).filter(Question.id==1).all()    # filter를 통해 조건 검색
+db.query(Question).get(1)                          # id는 primary key(유일 값)이므로 get 함수로도 조회 가능
+db.query(Question).filter(Question.subject.like("%FastAPI%")).all()    # subject 컬럼에 FastAPI라는 문자열이 포함된 Question객체 조회
+```
+
+- filter함수에 전달되는 like함수에 전달된 문자열에 붙은 % : 임의의 문자열을 나타냄
+- %FastAPI (=FastAPI로 끝나는 문자열), FastAPI% (=FastAPI로 시작하는 문자열), %FastAPI% (=FastAPI를 포함하는 문자열)
+
+<img width="300" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/14e74596-7466-445e-a3d6-a96a330cfac4">
+<img width="300" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/268d08c0-c534-4b22-a610-1cd45ce2b809">
+
+- id == 2 인 Question 객체의 subject 컬럼 값을 변경하고 조회해본 것이 좌측 사진이다
+- id == 1 인 Question 객체를 삭제하고 Question 객체를 전부 조회하면 원래 2개에서 1개가 삭제되어 1개만 남은 것을 확인할 수 있다
+
+<br>
+
+<img width="500" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/b9e076d1-d352-48f8-9b80-3a3f8c91752f">
+<img width="400" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/eada48fd-df1a-4afe-8ccf-b6a009e5edd9">
+
+- Answer 객체에 id가 자동적으로 1이 주어진 것을 확인할 수 있으며 이를 통해 get 함수로도 조회할 수 있다
+- a에 할당된 Answer 객체를 생성할 때 "question=q"를 하여 relationship이 정의되었다
+- relationship에 따라 a.question로 answer가 할당된 Question 객체를 조회할 수 있다
+- relationship의 backref에 "answers"라 하였기 때문에, q.answers를 사용해서 Answer 객체인 a를 조회할 수 있다
+
+```
+from datetime import datetime
+from models import Question, Answer
+from database import SessionLocal
+db = SessionLocal()
+q = db.query(Question).get(2)
+a = Answer(question=q, content='네 자동으로 생성됩니다.', create_date=datetime.now())
+db.add(a)
+db.commit()
+
+a = db.query(Answer).get(1)
+a
+a.question    # a가 답한 Question 객체 q를 조회
+q.answers     # q에 대답한 Answer 객체 a를 조회(여러 Answer 객체가 있었다면 해당 객체들 모두 조회)
+```
 
 <br>
 
