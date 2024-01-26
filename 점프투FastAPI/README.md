@@ -292,6 +292,83 @@ q.answers     # q에 대답한 Answer 객체 a를 조회(여러 Answer 객체가
 
 ## 4. 질문 목록 API 만들기
 
+### 라우터
+<img width="900" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/4f7a3ad9-01d7-4fc4-9049-bbaa2d6dcf68">
+
+```
+# myapi에서
+uvicorn main:app --reload    # FastAPI 서버 실행(백엔드 서버)
+
+# myapi/frontend에서
+npm run dev                  # Svelte 서버 실행(프론트엔드 서버)
+```
+
+<br>
+
+<img width="700" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/d4e31bd9-2227-4438-a9b7-3998ffae358d">
+<img width="500" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/09701689-f27f-437b-92e4-6c350c7a849c">
+
+```python
+# domain/question/question_router.py 생성
+
+from fastapi import APIRouter
+
+from database import SessionLocal
+from models import Question
+
+router = APIRouter( # APIRouter 클래스로 생성한 router 객체
+    prefix = "/api/question",   # prefix : 요청 URL 앞부분에 항상 포함되어야 하는 값
+)
+
+@router.get("/list")    # /api/question/list라는 URL 요청에 대응
+def question_list():
+    db = SessionLocal()
+    _question_list = db.query(Question).order_by(Question.create_date.desc()).all()
+    db.close()
+    return _question_list
+```
+
+```python
+# main.py 수정
+
+from domain.question import question_router # ./domain/question/question_router.py를 포함
+app.include_router(question_router.router) # question_router 파일의 router 객체를 포함
+```
+
+<br>
+
+### 의존성 주입
+
+- 질문 목록 API를 작성하였으니 프론트엔드에서 질문 목록 API를 호출하여 결과값을 화면에 출력할 수 있을 것이다
+- 그러나 question_list 함수에서 db 세션 객체를 생성하고 db.close()를 호출하는데 이를 자동화해야 한다
+    - cf) db.close()를 수행하지 않으면 SQLAlchemy가 사용하는 컨넥션 풀에 db 세션이 반환되지 않아 문제가 생긴다
+
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/2dc9a153-9c49-4c85-9891-df8c22413720">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/8e9a3d23-4658-4750-8499-ff2abb2d6d78">
+
+- 위와 같이 database에서 get_db라는 generator 함수를 만들고 question_router.py에서 with 구문으로 이를 활용하면, 안전한 코드를 설계할 수 있다
+- db.close()는 with 구문이 끝나면서 오류의 여부와 상관없이 실행되어 컨넥션 풀에 세션을 반납할 수 있게 된다
+
+<br>
+
+<img width="644" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/2f0337b5-feda-4d25-a267-7e9ebaa5697f">
+
+- with 구문을 사용하는 대신, db : Session = Depend(get_db)를 사용해서 의존성 주입을 할 수 있다
+- db 객체가 Session 타입임을 지정하고, db에는 get_db로 생성된 세션 객체가 주입된다
+- 이 때 get_db 함수에 자동으로 contextmanager가 적용되기 때문에 database.py의 get_db 함수에서 @contextlib 부분을 제거해야 한다
+
+<br>
+
+### 스키마
+
+- 현재 질문 목록 API의 출력은 all()로 Question 모델의 모든 항목을 출력으로 리턴하고 있다
+- 하지만 외부로 공개되면 안 되는 출력 항목이 있을 수 있고 출력값이 정확한지 검증하고 싶을 수도 있다
+- 이럴 때 사용하는 것이 Pydantic 라이브러리이다
+- Pydantic : FastAPI의 입출력 스펙을 정의하고 그 값을 검증하기 위해 사용하는 라이브러리
+
+
+
+
 <br>
 
 ## 5. API 호출 라이브러리
