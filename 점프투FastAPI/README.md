@@ -366,12 +366,30 @@ app.include_router(question_router.router) # question_router 파일의 router �
 - 이럴 때 사용하는 것이 Pydantic 라이브러리이다
 - Pydantic : FastAPI의 입출력 스펙을 정의하고 그 값을 검증하기 위해 사용하는 라이브러리
 
+```python
+# myapi/domain/question/question_schema.py
+import datetime
 
+from pydantic import BaseModel
 
+class Question(BaseModel): # BaseModel을 상속한 Question 객체 --> Question Schema
+    id : int
+    subject : str | None = None     # subject 값이 Null일 수 있음을 구현 --> nullable=True
+    content : str
+    create_date : datetime.datetime
+
+# 추가로 question_router.py 수정
+from domain.question import question_schema 
+@router.get("/list", response_model=list[question_schema.Question]) # response_model로 Question 스키마로 구성된 리스트를 설정
+```
+
+- Pydantic의 BaseModel을 상속받은 Question 스키마를 생성한다
+- "str | None = None"은 None 값을 허용하는 것으로 subject 컬럼의 nullable=True에 맞게 구현한 부분이다
+- @router.get에 response_model 속성을 추가하여 출력되는 데이터를 제한하거나 값을 검증하게 하였다
 
 <br>
 
-## 5. API 호출 라이브러리
+## 5. 질문 목록 화면 만들기
 
 <br>
 
