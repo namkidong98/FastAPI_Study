@@ -3,7 +3,10 @@
 
 팀 프로젝트에서 백엔드 역할을 맡게 되어 FastAPI를 공부하고 정리할 예정   
 
-참고 강의(유튜브) : https://www.youtube.com/playlist?list=PLqAmigZvYxIL9dnYeZEhMoHcoP4zop8-p    
+- 참고 강의(유튜브) : https://www.youtube.com/playlist?list=PLqAmigZvYxIL9dnYeZEhMoHcoP4zop8-p    
+- 참고 사이트       : https://fastapi.tiangolo.com/tutorial/   
+- 참고 서적(1)      : 점프 투 FastAPI (https://wikidocs.net/book/8531)    
+- 참고 서적(2)      : FastAPI를 사용한 파이썬 웹 개발 (https://product.kyobobook.co.kr/detail/S000201188332)   
 
 <br>
 
