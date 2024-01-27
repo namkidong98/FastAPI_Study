@@ -560,6 +560,99 @@ VITE_SERVER_URL=http://127.0.0.1:8000
 
 ## 6. 질문 상세
 
+```javascript
+// myapi/frontend/src/routes/Home.svelte 수정
+
+import { link } from 'svelte-spa-router' // a 태그에 use:link 속성을 사용하기 위해
+<li><a use:link href="/detail/{question.id}">{question.subject}</a></li> 
+```
+
+```javascript
+// myapi/frontend/src/App.svelte 수정
+
+import Detail from "./routes/Detail.svelte"
+
+const routes = {
+    '/' : Home,     // '/' 주소에 매핑되는 컴포넌트로 <Home />을 등록 --> Home.svelte 파일의 내용
+    '/detail/:question_id' : Detail, // :question_id처럼 앞에 :가 있으면 가변적인 값이 올 수 있음을 의미한다
+}
+```
+
+```javascript
+// myapi/frontend/src/routes/Detail.svelte 생성
+
+<script>
+    export let params = {}
+    let question_id = params.question_id
+    console.log('question_id:' + question_id)
+</script>
+
+<h1>제목</h1>
+<div>
+    내용
+</div>
+```
+
+<img width="479" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/29b8fc53-0aad-4032-8942-4352cbc4c11d">
+
+1. 질문 목록으로 출력한 제목 부분에 링크를 추가하기 위해 Home.svelte에 { link }를 import하고 코드를 수정한다
+2. detail에 관한 URL 규칙을 등록하기 위해 App.svelte 파일의 routes 객체를 위와 같이 수정한다
+3. Detail.svelte를 추가하여 질문 목록 중 하나를 누르면 http://127.0.0.1:8000/#detail/2와 같은 URL이 호출되고 전달된 파라미터 question_id가 콘솔에 잘 출력되는지 확인한다
+
+<br>
+
+```python
+# myapi/domain/question/question_crud.py에 함수 추가
+
+def get_question(db : Session, question_id : int):  # Path Parameter인 question_id를 받아서 
+    question = db.query(Question).get(question_id)  # 해당 Question 객체를 반환
+    return question
+```
+
+```python
+# myapi/domain/question/question_router.py에 함수 추가
+
+@router.get("/detail/{question_id}", response_model=question_schema.Question)   # 리턴은 하나의 Question 객체
+def question_detail(question_id : int, db : Session = Depends(get_db)):  # path parameter 'question_id' 받음
+    question = question_crud.get_question(db, question_id = question_id) # crud.py에서 정의한 함수로 해당 question_id로
+    return question                                                      # Question 객체를 조회해서 반환
+```
+
+```javascript
+// myapi/frontend/src/routes/Detail.svelte 수정
+
+<script>
+    import fastapi from "../lib/api"
+
+    export let params = {} // Detail 컴포넌트를 호출할 때 전달한 파라미터 값을 params에 읽어오기
+    let question_id = params.question_id
+    let question = {}
+
+    function get_question() {   // 읽어온 question_id로 detail/:question_id 꼴로 요청을 보내
+        fastapi("get", "/api/question/detail/" + question_id, {}, (json) => {  
+            question = json     // JSON 형태로 데이터를 받고 이를 question 변수에 저장한다
+        })
+    }
+
+    get_question()
+</script>
+
+<!-- 저장한 question 변수에서 subject와 content를 꺼내서 출력한다-->
+<h1>{question.subject}</h1>     
+<div>
+    {question.content}
+</div>
+```
+
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/2d359207-971e-4653-a528-a689d581f648">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/baddc218-a99f-4a47-a4d3-672aa8155020">
+
+<br>
+
+4. 질문 상세 화면을 프론트 단위에서 구성했으니, 백엔드 영역에서 질문 한개에 대한 상세 내용을 리턴하는 질문 상세 API를 작성해야 한다
+5. question_crud.py에 get_question 함수를 추가하여 path parameter로 question_id를 받아 해당 키를 갖고 있는 Question 객체를 DB에서 조회해서 반환한다
+6. FastAPI의 docs 문서에서 새로 만든 질문 상세 조회 API를 테스트하면 위의 좌측 사진과 같다
+7. 질문 상세 API가 준비되었으니, 마지막으로 Detail.svelte를 수정하여 기존에 "제목", "내용"에 해당 Question 객체의 subject와 content를 출력할 수 있게 한다
 
 <br>
 
