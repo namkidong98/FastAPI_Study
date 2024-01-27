@@ -272,7 +272,7 @@ db.query(Question).filter(Question.subject.like("%FastAPI%")).all()    # subject
 - relationship에 따라 a.question로 answer가 할당된 Question 객체를 조회할 수 있다
 - relationship의 backref에 "answers"라 하였기 때문에, q.answers를 사용해서 Answer 객체인 a를 조회할 수 있다
 
-```
+```shell
 from datetime import datetime
 from models import Question, Answer
 from database import SessionLocal
@@ -391,9 +391,175 @@ from domain.question import question_schema
 
 ## 5. 질문 목록 화면 만들기
 
+### 질문 목록 화면 구현하기
+
+- 질문 목록 API를 호출하여 그 내용을 웹 브라우져에 표시하도록 만들 예정이다
+- 이를 위해서는 프론트엔드 코딩이 필요하며, myapi/frontend/src/App.svelte를 다음과 같이 수정해야 한다
+
+```html
+<script>  // script 안에서는 Javascript 코드를 작성
+  let question_list = []  // 리스트 변수를 선언
+
+  function get_question_list() {
+    fetch("http://127.0.0.1:8000/api/question/list").then((response) => { // fetch로 서버에 GET 요청을 보내고
+      response.json().then((json) => {  // 응답 받은 후 JSON으로 변환
+        question_list = json            // 콜백 함수에서 받은 JSON 데이터를 question_list에 저장
+      })
+    })
+  }
+  get_question_list()
+</script>
+
+<ul>  <!-- unordered list 태그 -->
+  {#each question_list as question} <!-- #each로 반복문 구현 --> 
+    <li>{question.subject}</li> <!-- li : list item 태그, question 객체의 subject 속성-->
+  {/each}
+</ul> <!-- unordered list에서 list item이 수직으로 쌓여 나가서 Question 객체의 subject가 순차적으로 표시 -->
+```
+
+<img width="557" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/af84158b-fed4-46f7-90d5-993d9ee01bcf">
+
+- 질문 목록 API를 통해 현재 Question 객체로 DB에 저장된 1개의 데이터의 subject("FastAPI Model Question")이 출력되었다
+
+<br>
+
+### Svelte Router
+
+- 질문 답변 사이트인 파이보(pybo)는 다음과 같은 화면들이 필요하다
+  1. 질문 목록 - 질문의 목록을 표시하는 화면
+  2. 질문 상세 - 질문의 상세 내용을 확인하고 답변을 작성하는 화면
+  3. 질문 작성 - 질문을 작성하는 화면
+  4. 질문 수정 - 질문을 수정하는 화면
+  5. 답변 수정 - 답변을 수정하는 화면
+  6. 회원 가입 - 회원 가입을 위한 화면
+  7. 로그인 - 로그인을 위한 화면
+
+- Svelte는 SPA(Single Page Application)이기 때문에 단 하나의 페이지에서만 내용을 달리하여 표시해야 한다
+    - cf) SPA :  웹 사이트의 전체 페이지를 하나의 페이지에 담아 동적으로 화면을 바꿔가며 표현하는 것
+- 하나의 페이지에서 화면을 바꾸어가며 만들려면 코드가 복잡해지나 svelte-spa-router를 사용하면 된다
+
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/dc73a42c-640c-424a-ac1a-a7514f2ba36a">
+
+```bash
+# myapi/frontend 에서
+npm install svelte-spa-router    # svelte-spa-router 설치
+npm run dev                      # 설치 후 서버 재시작
+```
+
+<br>
+
+<img width="900" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/61bcb256-6d88-407c-8476-d199f9459ff8">
+
+- myapi/frontend/src 하위에 routes 디렉토리를 만들어서 필요한 화면들 각각에 대한 URL 주소를 매핑하는 파일들을 따로 관리한다
+- Home.svelte에 기존의 App.svelte 내용을 복사하고 App.svelte는 svelte-spa-router의 Router 컴포넌트를 생성하도록 수정한다
+- 이를 통해 정의한 라우팅이 애플리케이션에서 적용하여 페이지의 경로에 따라 다른 컴포넌트를 표시할 수 있도록 한다
+
+<br>
+
+### API 호출 라이브러리
+
+- 질문 목록처럼 데이터를 조회하기 위해서는 항상 백엔드 서버에 요청하여 데이터를 가져와야 한다
+- fetch함수를 사용하는 부분을 공통 라이브러리로 만들어서 사용하면 편리할 것이다
+
+- myapi/frontend/src/lib에 api.js 파일을 다음과 같이 생성한다
+
+```javascript
+/* 파라미터 설명
+operation : 데이터를 처리하는 방법(get, post, put, delete)
+url       : 요청 URL, 단 백엔드 서버의 호스트명 이후의 URL만 전달
+params    : 요청 데이터     ex) {page : 1, keyword : "마크다운"}
+success_callback : API 호출 성공시 수행할 함수, API 호출시 반환된 JSON이 입력으로 주어짐
+failure_callback : API 호출 실패시 수행할 함수, 오류값이 입력으로 주어짐
+*/
+const fastapi = (operation, url, params, success_callback, failure_callback) => {
+    let method = operation
+    let content_type = 'application/json'
+    let body = JSON.stringify(params) // 요청 데이터를 JSON 문자열로 바꿔서 body로 저장
+
+    // let _url = 'http://127.0.0.1:8000'+url  // url 파라미터는 호스트명을 생략하도록
+    let _url = import.meta.env.VITE_SERVER_URL+url // .env 파일에 등록한 환경변수를 사용
+
+    if(method === 'get') { // GET이면
+        _url += "?" + new URLSearchParams(params)  // 파라미터를 GET 방식에 맞게끔 조립
+    }
+
+    let options = {
+        method: method,
+        headers: {
+            "Content-Type": content_type
+        }
+    }
+
+    if (method !== 'get') { // GET이 아니면
+        options['body'] = body // options에 body 항목에 전달 받은 요청 데이터(params의 JSON형태) 추가
+    }
+
+    fetch(_url, options)
+        .then(response => {
+            response.json()
+                .then(json => { // API 호출 성공은 HTTP 프로토콜의 응답코드가 200~299이므로
+                    if(response.status >= 200 && response.status < 300) {  // 200 ~ 299
+                        if(success_callback) {
+                            success_callback(json)
+                        }
+                    }else {
+                        if (failure_callback) {
+                            failure_callback(json)
+                        }else { //failure_callback이 없어도 alert로 오류 부분 출력
+                            alert(JSON.stringify(json))
+                        }
+                    }
+                })
+                .catch(error => {
+                    alert(JSON.stringify(error))
+                })
+        })
+}
+
+export default fastapi // 해당 모듈을 다른 파일에서 가져올 수 있도록 내보내기(export)
+```
+
+<br>
+
+- 호스트명을 하드코딩(http://127.0.0.1:8000)한 상황인데, 호스트명은 개발, 운영 등 상황에 따라 변하니 하드코딩된 상태는 좋지 않다
+- 따라서 호스트명을 따로 환경파일에 저장하고 그 값을 불러와 사용할 수 있도록 수정하도록 한다
+- 이를 위해 myapi/frontend에 .env 파일을 생성하고 VITE_SERVER_URL 환경변수를 추가한다
+    - svelte 파일에서 .env 파일의 항목을 읽기 위해서는 반드시 VITE_로 시작하는 환경변수명을 등록해야 한다
+- 그리고 등록한 환경변수를 사용하도록 api.js파일의 _url 변수를 수정해준다
+- 또한 Home.svelte에서 api.js의 fastapi 함수를 사용하도록 코드를 수정한다
+
+```
+# myapi/frontend/.env 파일 생성
+VITE_SERVER_URL=http://127.0.0.1:8000
+```
+
+```svelte
+// myapi/frontend/src/routes/Home.svelte 수정
+<script>  // script 안에서는 Javascript 코드를 작성
+    import fastapi from "../lib/api" // myapi/frontend/src/lib/api.js 파일의 fastapi 함수를 import
+    let question_list = []  // 리스트 변수를 선언
+  
+    function get_question_list() {
+        fastapi('get', '/api/question/list', {}, (json) => {
+            question_list = json
+        }) // operation으로 GET, url을 주고 params는 빈 값, success_callback으로 화살표 함수, failure_callback은 생략
+           // success_callback은 응답으로 받은 json 데이터를 question_list에 대입하라는 내용
+           // failure_callback은 없어도 alert로 오류 내용을 표시하게 되어 있으니 괜찮다
+    }
+    get_question_list()
+</script>
+
+<ul> <!-- unordered list 태그 -->
+    {#each question_list as question} <!-- #each로 반복문 구현 --> 
+        <li>{question.subject}</li> <!-- li : list item 태그, question 객체의 subject 속성-->
+    {/each}
+</ul> <!-- unordered list에서 list item이 수직으로 쌓여 나가서 Question 객체의 subject가 순차적으로 표시 -->
+```
+
 <br>
 
 ## 6. 질문 상세
+
 
 <br>
 
