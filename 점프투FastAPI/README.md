@@ -1,4 +1,4 @@
-<img width="682" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/a3f12bb0-b5de-4a53-a507-0642378f042b"># 1장. FastAPI 개발준비!
+<img width="365" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/f1797620-132b-44c3-9cf1-d782da142f50"><img width="209" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/a8c49153-3a2d-4e23-9dd3-b0045a27cb9b"><img width="682" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/a3f12bb0-b5de-4a53-a507-0642378f042b"># 1장. FastAPI 개발준비!
 
 ## 1. 파이썬 가상 환경 사용
 <img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/77d5d843-7513-4c96-873b-7399ab6b3512">
@@ -657,6 +657,283 @@ def question_detail(question_id : int, db : Session = Depends(get_db)):  # path 
 <br>
 
 ## 7. 답변 등록
+
+- 앞에서 기존에 있는 질문 목록과 상세 내역을 조회하는 기능을 만들었다 (GET method)
+- 이번에는 질문에 답변을 등록하고 등록한 답변을 보여주는 기능을 만든다 (POST method)
+
+
+### 답변 등록 API
+
+```python
+# myapi/domain/answer/answer_schema.py 생성
+
+from pydantic import BaseModel, field_validator
+
+class AnswerCreate(BaseModel):  # 답변 등록시 사용할 스키마
+    content : str               # 답변 등록에 전달되는 유일한 파라미터, 유일하기에 필수값(nullable=False)
+
+    @field_validator('content')
+    def not_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError("빈 값은 허용하지 않습니다.")
+        return v
+```
+
+```python
+# myapi/domain/answer/answer_crud.py 생성
+
+from datetime import datetime
+from sqlalchemy.orm import Session
+from domain.answer.answer_schema import AnswerCreate
+from models import Answer, Question
+
+# 답변을 등록하기 위한 create_answer 함수
+# db와 Question 객체, AnswerCreate 객체를 받아서 모델 중 하나인 Answer 객체를 만들고 이를 db에 올린다
+def create_answer(db : Session, question: Question, answer_create : AnswerCreate):
+    db_answer = Answer(question = question,
+                       content = answer_create.content,
+                       create_date = datetime.now())
+    db.add(db_answer)
+    db.commit()
+```
+
+```python
+# myapi/domain/answer/answer_router.py 생성
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from starlette import status
+
+from database import get_db
+from domain.answer import answer_schema, answer_crud
+from domain.question import question_crud
+
+router = APIRouter(
+    prefix = "/api/answer",
+)
+
+@router.post("/create/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
+def answer_create(question_id : int,    # path parameter인 question_id
+                  _answer_create : answer_schema.AnswerCreate,
+                  db : Session = Depends(get_db)):
+    question = question_crud.get_question(db, question_id=question_id) # question_id로 Question 조회
+
+    if not question: # 만약 해당하는 question이 없다면
+        raise HTTPException(status_code=404, detail="Question not found") # '응답 없음'을 출력
+    answer_crud.create_answer(db, question=question,        # question이 있으면 이에 대한
+                              answer_create=_answer_create) # Answer 객체를 생성하고 db에 올린다(함수 내부적으로)
+
+```
+
+```python
+# myapi/main.py에 answer_router를 추가
+from domain.answer import answer_router
+
+# ... 중간 생략
+
+app.include_router(answer_router.router)
+```
+
+1. answer_schema.py를 생성하여 답변 등록시 사용할 스키마를 정의한다
+2. answer_crud.py를 생성하여 POST method에 맞는 create_answer 함수를 정의한다
+    - cf) create_answer 함수 : db, Question, AnswerCreate 객체를 받아서 Answer 객체를 만들고 DB에 올리는 함수
+3. answer_router.py를 생성하여 APIRouter 객체를 생성하고 path parameter인 question_id로 Question 객체를 조회하고 이를 바탕으로 answer_crud의 create_answer 함수를 호출하여 Answer 객체를 생성하고 DB에 올리는 작업을 수행한다
+4. 작성한 router를 main.py에 등록한다 
+
+<br>
+
+### 답변 등록 화면 작성
+
+<img width="626" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/97fc7854-1b1c-489f-b76d-97c3a6031aa0">
+
+```javascript
+# myapi/frontend/src/routes/Detail.svelte 수정
+
+<script>
+    import fastapi from "../lib/api"
+
+    export let params = {} // Detail 컴포넌트를 호출할 때 전달한 파라미터 값을 params에 읽어오기
+    let question_id = params.question_id
+    let question = {}
+    let content = ""
+
+    // 하나의 질문을 가져오는 함수
+    function get_question() {   // 읽어온 question_id로 detail/:question_id 꼴로 요청을 보내
+        fastapi("get", "/api/question/detail/" + question_id, {}, (json) => {  
+            question = json     // JSON 형태로 데이터를 받고 이를 question 변수에 저장한다
+        })
+    }
+
+    get_question()
+
+    // 답변을 등록하는 함수
+    function post_answer() {
+        event.preventDefault()  // submit 버튼이 눌릴 경우 form이 자동으로 전송되는 것을 방지
+        let url = "/api/answer/create/" + question_id
+        let params = {
+            content : content
+        }
+        fastapi('post', url, params, 
+            (json) => {
+                content = ''
+                get_question()
+            }
+        )
+    }
+</script>
+
+<!-- 저장한 question 변수에서 subject와 content를 꺼내서 출력한다-->
+<h1>{question.subject}</h1>     
+<div>
+    {question.content}
+</div>
+
+<form method="post">
+    <textarea rows="15" bind:value={content}></textarea> <!--글을 적는 공간을 만들고 content에 저장-->
+    <input type="submit" value="답변 등록" on:click="{post_answer}"> <!-- '답변 등록' 버튼을 누르면 post_answer함수 실행-->
+</form>
+```
+
+5. 답변 등록 API는 응답 결과가 없는 API인데 기존에 fastapi 함수는 응답결과(json)가 있을 경우에만 success_callback을 실행하므로 수정을 해줘야 한다
+    - response.status가 204(No content)인 경우에 success_callback을 호출하고 뒤의 코드가 실행되지 않도록 return 처리한다
+6. Detail.svelte를 수정하여 답변 입력을 위한 텍스트 창(textarea), <답변등록> 버튼, 버튼을 누르면 답변을 등록하는 post_answer 함수를 구현한다
+
+<br>
+
+### 질문 상세의 출력 스키마 수정(Answer, Question)
+
+```python
+# myapi/domain/answer/answer_schema.py에 추가
+
+class Answer(BaseModel):    # Answer 스키마는 출력으로 사용할 답변 1건을 의미
+    id : int
+    content : str
+    create_date : datetime.datetime
+```
+```python
+# myapi/domain/question/question_schema.py 수정
+
+from domain.answer.answer_schema import Answer
+
+class Question(BaseModel): # BaseModel을 상속한 Question 객체 --> Question Schema
+    id : int
+    subject : str | None = None     # subject 값이 Null일 수 있음을 구현 --> nullable=True
+    content : str
+    create_date : datetime.datetime
+    answers : list[Answer] = []     # Question 모델과 Answer 모델은 relationship으로 연결되어 있다
+                                    # backref="answers"이므로 반드시 "answers"라는 이름의 속성으로 추가해야 한다
+```
+
+<img width="637" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/6e9afbca-4c5b-48cf-bb33-4fb1f7a9526a">
+
+7. answer_schema.py에 출력으로 사용할 답변 1건에 대한 Answer 스키마를 추가한다
+8. question_schema.py의 Question 스키마에 Answer 스키마로 구성된 answers 리스트를 추가한다
+    - Question 모델은 Answer 모델과 relationship으로 연결되어 있으며 backref="answers"이므로 반드시 answers라는 이름의 속성을 사용해야 한다
+
+<br>
+
+### 질문 상세 화면에 답변 표시하기
+
+```javascript
+// myapi/frontend/src/routes/Detail.svelte 수정
+
+<script>
+// ... 생략
+    let question = {answers:[]} // each문에서 question.answers를 참조하고 있는데
+                                // get_question은 비동기로 진행되므로
+                                // 아직 조회되지 않은 상태에서 each문이 실행되면 answers 항목이 없어서 오류 발생
+// ... 생략
+</script>
+
+<!-- 질문에 등록된 답변(answers)들을 순차적으로 표시하는 부분 -->
+<ul>
+    {#each question.answers as answer}
+        <li>{answer.content}</li>
+    {/each}
+</ul>
+```
+
+9. Detail.svelte를 수정하여 질문에 등록된 답변들을 화면에 표시한다 
+    - #each 반복 구문과 <li> 태그를 사용해서 순차적으로 쌓는 방식으로 일단 표현한다
+
+<br>
+
+### 오류 처리하기
+
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/d8859f8c-427a-41a5-afb6-f479e223bef4">
+<img width="300" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/58a670cd-86cd-454e-8027-8768567fa443">
+
+```javascript
+# myapi/frontend/src/components/Error.svelte 추가
+<script>
+    export let error // 전달 받은 오류
+</script>
+
+{#if typeof error.detail === 'string'}
+    <ul>
+        <li>{error.detail}</li>
+    </ul>
+{:else if typeof error.detail === 'object' && error.detail.length > 0}
+    <ul>
+        {#each error.detail as err, i}
+        <li>
+            <strong>{err.loc[1]}</strong> : {err.msg}
+        </li>
+        {/each}
+    </ul>
+{/if}
+```
+
+```javascript
+# myapi/frontend/src/routes/Detail.svelte 수정
+
+<script>
+import Error from "../components/Error.svelte" // 오류 처리를 위해
+let error = {detail : []}
+
+// ... 생략
+
+// 답변을 등록하는 함수
+    function post_answer() {
+        event.preventDefault()  // submit 버튼이 눌릴 경우 form이 자동으로 전송되는 것을 방지
+        let url = "/api/answer/create/" + question_id
+        let params = {
+            content : content
+        }
+        fastapi('post', url, params, 
+            (json) => { // success_callback
+                content = ""
+                error = {detail : []}   // 오류가 발생한 이후 다시 입력값을 조정하여 성공했을 때를 위해
+                                        // error를 다시 초기화 해줘야 의도한 바대로 출력된다
+                get_question()
+            },
+            (err_json) => { // failure_callback
+                error = err_json
+            }
+        )
+    }
+</script>
+
+// ... 생략
+
+<!-- 오류 발생시 오류의 내용을 확인할 수 있도록 -->
+<Error error={error} />
+
+// ... 생략
+```
+
+10. 답변을 등록하는 텍스트 창(Textarea)에 값을 넣지 않고 '답변등록' 버튼을 누르면, fastapi를 호출할 때 failure_callback 함수를 전달하지 않았기 때문에 alert 창이 표시된다
+11. myapi/frontend/src 하위에 Error 컴포넌트를 저장할 components 디렉토리를 만들고 위와 같이 Error.svelte 파일을 생성한다
+12. Detail.svelte의 post_answer 함수에 failure_callback에 에러를 JSON 형식으로 받도록 설정하고 Error 컴포넌트의 error 변수에 이를 보내서 화면에 출력할 수 있도록 한다
+
+<br> 
+
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/717067a8-9d37-4e14-937d-5872aec625d3">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/97140357-fc7e-4600-b7d6-633e0a320340">
+
+- "content : Value error, 빈 값은 허용하지 않습니다."라고 오류의 내용이 alert창이 아닌 Error 컴포넌트로 표시되는 것을 확인할 수 있다
+- 그대로 특정 문자열("빈 값이 아닙니다")을 입력하고 답변 등록을 하면, 에러 출력 없이 답변 목록이 늘어나는 것도 확인할 수 있다
+    - success_callback에서 error = {detail : []}로 초기화해주기 때문에 오류 메시지 없이 답변 목록만 늘어나는 것이다
 
 <br>
 
