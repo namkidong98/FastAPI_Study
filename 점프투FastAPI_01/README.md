@@ -939,19 +939,309 @@ let error = {detail : []}
 
 ## 8. 화면 예쁘게 꾸미기
 
+<img width="491" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/7fca27e0-b591-4f01-8fd8-be4d4c3dc202">
+
+```javascript
+// myapi/frontend/src/routes/Detail.svelte에 <style> 블록 추가
+
+//... 생략
+</form>
+
+<!-- CSS 스타일을 적용 -->
+<style>
+    textarea {
+        width:100%; /* 텍스트 창의 너비를 100%(웹 브라우저 너비 기준)로 넓히고 */
+    }
+    input[type=submit] {
+        margin-top:10px; /* 답변등록 버튼 위에 마진을 10px 추가 */
+    }
+</style>
+```
+
+- Detail.svelte 파일에 CSS 스타일을 추가하여 질문 상세 화면을 변경한다
 
 <br>
 
 ## 9. 부스트랩으로 더 쉽게 화면 꾸미기
 
+- 웹 디자이너 없이 웹 프로그램을 만들기 위해 화면 디자인 작업을 하는데 시간과 노력이 소요된다
+- 이를 도와주기 위해 부트스트랩(Bootstrap)을 사용하면 혼자서도 화면을 괜찮은 수준으로 만들 수 있다
+
+<img width="448" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/e9cd71fa-eeb7-4163-a56e-333cd287632c">
+
+```javascript
+// myapi/frontend/src/main.js에 2줄 추가
+
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/boostrap.min.js'
+```
+
+```javascript
+// myapi/frontend/src/routes/Home.svelte
+
+// ..생략
+<!--container my-3, table, table-dark가 부트스트랩이 제공하는 클래스이다 -->
+<div class="container my-3">
+    <table class="table">
+        <thead> <!-- 테이블 형식에서 헤드 부분 -->
+        <tr class="table-dark"> <!-- tr은 행, td는 열, th는 헤더 -->
+            <th>번호</th>
+            <th>제목</th>
+            <th>작성일시</th>
+        </tr>
+        </thead>
+        <tbody> <!-- 테이블 형식에서 바디 부분 -->
+        {#each question_list as question, i} <!-- #each로 반복문 구현 --> 
+        <tr>
+            <td>{i+1}</td>  <!--숫자로 순서 표시-->
+            <td>
+                <a use:link href="/detail/{question.id}">{question.subject}</a> <!-- 질문 제목에 링크를 걸고 -->
+            </td>
+            <td>{question.create_date}</td> <!-- 질문 생성 날짜 출력 -->
+        </tr>
+        {/each}
+        </tbody>
+    </table>
+</div>
+```
+
+1. frontend 디렉토리에서 'npm install bootstrap' 명령어를 입력하면 myapi/frontend/node_modules/boostrap에 파일들이 설치된다
+2. myapi/frontend/src/main.js에 위와 같이 import를 하여 화면 전체에 부트스트랩을 적용한다
+    - main.js 파일을 Svelte의 index.html 파일에서 참조하는 JavaScript 파일이다
+3. Home.svelte 파일에 ul 엘리먼트로 간단히 표시한 기존 질문 목록을 table 엘리먼트를 사용하여 표현한다
+
+<img width="664" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/f43b87e8-9b06-4842-9331-ae7863c8975c">
+
+<br><br>
+
+<img width="587" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/f1e606c3-8e19-48c8-9574-fb763d532fb4">
+
+```javascript
+// myapi/frontend/src/routes/Detail.svelte의 script 아래 부분을 부트스트랩 적용된 부분으로 대체
+
+//.. 생략
+
+</script>
+
+<div class="container my-3">
+    <!-- 질문 -->
+    <h2 class="border-bottom py-2">{question.subject}</h2>
+    <div class="card my-3">
+        <div class="card-body">
+            <div class="card-text" style="white-space: pre-line;">{question.content}</div>
+            <div class="d-flex justify-content-end">
+                <div class="badge bg-light text-dark p-2">
+                    {question.create_date}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 답변 목록 -->
+    <h5 class="border-bottom my-3 py-2">{question.answers.length}개의 답변이 있습니다.</h5>
+    {#each question.answers as answer}
+    <div class="card my-3">
+        <div class="card-body">
+            <div class="card-text" style="white-space: pre-line;">{answer.content}</div>
+            <div class="d-flex justify-content-end">
+                <div class="badge bg-light text-dark p-2">
+                    {answer.create_date}
+                </div>
+            </div>
+        </div>
+    </div>
+    {/each}
+    <!-- 답변 등록 -->
+    <Error error={error} />
+    <form method="post" class="my-3">
+        <div class="mb-3">
+            <textarea rows="10" bind:value={content} class="form-control" />
+        </div>
+        <input type="submit" value="답변등록" class="btn btn-primary" on:click="{post_answer}" />
+    </form>
+</div>
+```
+
+4. Detail.svelte 파일에도 부트스트랩이 제공하는 클래스를 사용하여 질문 상세 화면을 꾸밈
+
+<br>
+
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/6475b348-db84-4ddc-a880-f9abfde535f0">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/cdbabe5e-582a-4479-bdf6-b357d076310e">
+
+```javascript
+// myapi/frontend/src/components/Error.svelte의 if문 수정
+
+<script>
+    export let error // 전달 받은 오류
+</script>
+
+{#if typeof error.detail === 'string'}
+    <div class="alert alert-danger" role="alert">
+        <div>
+            {error.detail}
+        </div>
+    </div>    
+{:else if typeof error.detail === 'object' && error.detail.length > 0}
+    <div class="alert alert-danger" role="alert">
+        {#each error.detail as err, i}
+        <div>
+            <strong>{err.loc[1]}</strong> : {err.msg}
+        </div>
+        {/each}
+    </div>   
+{/if}
+```
+
+5. Error.svelte 파일에도 부트스트랩이 제공하는 클래스를 사용하여 오류 컴포넌트에 부트스트랩을 적용
+
 <br>
 
 ## 10. 질문 등록
 
+### 질문 등록 Schema, CRUD, Router
+
+```python
+# myapi/domain/question/question_schema.py에 QuestionCreate 스키마 추가
+
+from pydantic import BaseModel, field_validator
+# .. 생략
+
+class QuestionCreate(BaseModel): # subject, content로 구성된 질문 등록 스키마
+    subject : str
+    content : str
+
+    @field_validator('subject', 'content')  # subject와 content에는 빈 값을 허용하지 않는다
+    def not_empty(cls, v):
+        if not v or not v.strip():  # 만약 값이 없거나 빈 문자열이면
+            raise ValueError("빈 값은 허용되지 않습니다.")  # ValueError를 일으킨다
+        return v
+```
+
+```python
+# myapi/domain/question/question_crud.py에 create_question 함수 추가
+
+# .. 생략
+
+import datetime import datetime
+from domain.question.question_schema import QuestionCreate
+
+# .. 생략
+
+def post_question(db : Session, question_create: QuestionCreate)
+    db_question = Question(subject = question_create.subject,
+                           content = question_create.content,
+                           create_date = datetime.now())
+    db.add(db_question)
+    db.commit()
+```
+
+```python
+# myapi/domain/question/question_router.py에 POST 역할의 question_create 추가
+
+from starlette import status
+
+# ..생략
+
+@router.post("/create", status_code=status.HTTP_204_NO_CONTENT)      # 질문 등록 API에는 리턴할 응답이 없으므로 
+def question_create(_question_create:question_schema.QuestionCreate, # 라우터 함수의 응답으로 response_model 대신 status_code를 사용한다
+                    db : Session = Depends(get_db)):
+    question_crud.create_question(db = db, question_create = _question_create)
+```
+
+1. question_schema.py에 질문 등록 API의 입력 항목으로 subject, content를 담고 있는 QuestionCreate 스키마를 만든다
+2. question_crud.py에 질문 데이터를 저장하는 create_question 함수를 작성한다
+3. question_crud.py에 있는 question_create 함수를 router 객체에 포함한다
+4. docs에서 테스트해보면 아래의 사진과 같이 subject, content 입력을 넣고 response는 status_code 204가 나오는 것을 확인할 수 있다
+
+<img width="377" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/9a490367-b096-4686-80b5-63e521ced02b">
+
+<br><br>
+
+### 질문 등록 화면 만들기
+
+```javascript
+# myapi/frontend/src/routes/Home.svelte
+// ..생략
+
+    </table>
+    <a use:link href="/question-create" class="btn btn-primary">질문 등록하기</a>
+</div>
+```
+5. Home.svelte를 수정하여 질문을 등록하기 위한 버튼을 질문 목록 화면에 추가한다
+
 <br>
 
-# 3장. 파이보 서비스 개발
+```javascript
+# myapi/frontend/src/App.svelte
+
+// ..생략
+  import QuestionCreate from "./routes/QuestionCreate.svelte"
+
+  const routes = {
+    '/' : Home,     // '/' 주소에 매핑되는 컴포넌트로 <Home />을 등록 --> Home.svelte 파일의 내용
+    '/detail/:question_id' : Detail, // :question_id처럼 앞에 :가 있으면 가변적인 값이 올 수 있음을 의미한다
+    '/question-create' : QuestionCreate 
+  }
+</script>
+
+// ..생략
+```
+
+6. App.svelte에 /question-create 경로에 매핑되는 QuestionCreate 컴포넌트를 등록하여 질문 등록 라우터를 등록한다
 
 <br>
 
-# 4장. 세상에 선보이는 파이보 서비스
+```javascript
+# myapi/frontend/src/routes/QuestionCreate.svelte 생성
+
+<script>
+    import {push} from 'svelte-spa-router'
+    import fastapi from "../lib/api"
+    import Error from "../components/Error.svelte"
+
+    let error = {detail:[]}
+    let subject = ""
+    let content = ""
+
+    function post_question(event) {
+        event.preventDefault()
+        let url = "/api/question/create"
+        let params = {
+            subject : subject,
+            content : content,
+        }
+        fastapi('post', url, params,
+            (json) => {
+                push("/")
+            },
+            (json_error) => {
+                error = json_error
+            }
+        )
+    }
+</script>
+
+<div class="container">
+    <h5 class="my-3 border-bottom pb-2">질문 등록</h5>
+    <Error error={error} />
+    <form method="post" class="my-3">
+        <div class="mb-3">
+            <label for="subject">제목</label>
+            <input type="text" class="form-control" bind:value="{subject}">
+        </div>
+        <div class="mb-3">
+            <label for="content">내용</label>
+            <textarea class="form-control" rows="10" bind:value="{content}"></textarea>
+        </div>
+        <button class="btn btn-primary" on:click="{post_question}">저장하기</button>
+    </form>
+</div>
+```
+
+7. 질문 등록 화면을 만들기 위해 위와 같이 QuestionCreate.svelte 파일을 작성한다
+8. 테스트를 위해 접속해보면, Home에서 질문 등록하기 버튼이 생겼고, 이를 누르면 질문 등록 화면으로 넘어가고(QuestionCreate.svelte), 저장하기를 누르면 정상적으로 질문 등록이 되고 목록에 등록한 질문이 표시되는 것을 확인할 수 있다
+
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/9b925d50-b8ea-4231-8b5b-3475868e85b1">
+<img width="300" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/508a9072-1252-4729-a250-ad92f16992a2">
+<img width="300" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/6c29a29c-5dc1-40d5-ad41-162b2e8446a5">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/502231b5-4ad3-42ba-8a6d-4f7f86c0f4e8">
