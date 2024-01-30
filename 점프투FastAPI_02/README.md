@@ -520,11 +520,11 @@ class UserCreate(BaseModel):
 
 <br>
 
-```
+```python
 # myapi/domain/user/user_crud.py
 
 from sqlalchemy.orm import Session
-from doamin.user.user_schema import UserCreate
+from domain.user.user_schema import UserCreate
 from models import User
 from passlib.context import CryptContext
 
@@ -573,7 +573,7 @@ def user_create(_user_create : user_schema.UserCreate,
 ```python
 from domain.user import user_router
 #..생략
-app.include_router(answer_router.user)
+app.include_router(user_router.user)
 ```
 
 8. main.py에 생성한 user_router를 등록한다
