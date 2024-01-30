@@ -668,8 +668,13 @@ import UserCreate from "./routes/UserCreate.svelte"
 
 <br>
 
-<img width="700" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/60d6cb20-789f-402c-bb9c-250af38e6c46">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/60d6cb20-789f-402c-bb9c-250af38e6c46">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/294c2c9e-dfec-41df-8919-612ef2c2f894">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/c4bdc756-5808-47e2-8934-41f154b99ca9">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/dfd981d6-7507-4d9e-b91f-12cf57f7a72e">
 
+- 첫 번째 사진과 같이 회원가입 창이 만들어 지는 것을 확인할 수 있으며 동일한 이름이나 이메일에 대해 검증을 하기 때문에 2번째 사진처럼 에러 메시지를 출력하기도 한다
+- 3번째 사진에서 새로운 회원이 입력되고 '생성하기' 버튼을 누르면 4번째 사진과 같인 빈 화면으로 이동한다. 로그인 화면으로 이동하는 것인데 아직 구현하지 않아 빈칸이다.
 
 <br>
 
