@@ -228,7 +228,7 @@ function get_question_list() {
 
     <a use:link href="/question-create" class="btn btn-primary">질문 등록하기</a>
 </div>
-```
+``` 
 
 2. Home.svelte에서 페이징 처리를 추가하여 페이지 리스트를 추가한다
 3. 마지막에 each문 사이에 if문을 추가해서 현재 페이지 기준 아래 5, 위 5개로 총 11개의 페이지만 보이도록 수정한다
