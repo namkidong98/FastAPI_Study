@@ -537,9 +537,16 @@ def create_user(db : Session, user_create : UserCreate):
                    email = user_create.email)
     db.add(db_user)
     db.commit()
+
+def get_existing_user(db : Session, user_create : UserCreate):
+    return db.query(User).filter(
+        (User.username == user_create.username) |   # 동일한 이름
+        (User.email == user_create.email)           # 동일한 이메일
+    ).first()                                       # 에 해당하는 첫번째 user를 반환
 ```
 
 6. user_crud.py를 위와 같이 생성하고 passlib의 CryptContext를 이용해 비밀번호를 암호화하여 저장한다
+7. get_existing_user 함수를 추가하여 User에 입력받은 UserCreate 스키마의 username과 email 중 하나라도 같은게 있는 user가 있는지 찾고 반환한다다
 
 <br>
 
@@ -548,7 +555,7 @@ def create_user(db : Session, user_create : UserCreate):
 ```python
 # myapi/domain/user/user_router.py
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from starlette import status
@@ -563,10 +570,15 @@ router = APIRouter(
 @router.post("/create", status_code=status.HTTP_204_NO_CONTENT)
 def user_create(_user_create : user_schema.UserCreate,
                 db : Session = Depends(get_db)):
-    user_crud.create_user(db = db, user_create= _user_create)
+    user = user_crud.get_existing_user(db = db, user_create = user_create)  # 우선 기존 유저가 있는지 검사하고
+    if user:    # 기존 유저가 있으면
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,   # 에러 메시지 출력
+                            detail="이미 존재하는 사용자입니다")
+    user_crud.create_user(db = db, user_create= _user_create)       # 기존 유저가 없으면 DB에 추가
 ```
 
-7. user_router.py도 생성하고 user_create 함수 역시 질문 등록과 마찬가지로 응답이 없으므로 response_model 대신 status.HTTP_204_NO_CONTENT를 사용한다
+8. user_router.py도 생성하고 user_create 함수 역시 질문 등록과 마찬가지로 응답이 없으므로 response_model 대신 status.HTTP_204_NO_CONTENT를 사용한다
+9. user_crud.create_user를 이용하여 DB에 유저를 추가하기 전에 get_existing_user로 기존 유저가 있는지 검사하고 기존 유저가 없는 경우만 DB에 추가한다
 
 <br>
 
