@@ -680,8 +680,267 @@ import UserCreate from "./routes/UserCreate.svelte"
 
 ## 8. 로그인과 로그아웃
 
+### 로그인 API
+
+```
+# 로그인 API 입력 항목
+  username : 사용자명(사용자 ID)
+  password : 비밀번호
+
+# 로그인 API 출력 항목
+  access_token : 엑세스 토큰
+  token_tpye : 토큰의 종류(Bearer로 고정)
+  username : 사용자명(사용자 ID)
+```
+
+```python
+# myapi/domain/user/user_schema.py에 Token 스키마 추가
+
+class Token(BaseModel):
+    access_token : str
+    token_type : str
+    username : str
+```
+
+1. 로그인 API에 맞추어 Token 스키마를 user_schema.py에 추가한다
+
 <br>
 
+```python
+# myapi/domain/user/user_crud.py에 get_user 함수 추가
+
+def get_user(db : Session, username: str):
+    return db.query(User).filter(User.username == username).first()
+```
+
+2. username으로 User 데이터를 가져와서 비밀번호를 비교해야 하므로 get_user함수를 user_crud.py에 추가한다
+
+<br>
+
+```shell
+(myapi) C:\src\FastAPI_Study\점프투FastAPI>pip install python-multipart  # 멀티파트 데이터를 쉽게 다룰 수 있도록 도와주는 도구
+(myapi) C:\src\FastAPI_Study\점프투FastAPI>pip install "python-jose[cryptography]"  # JWT(JSON Web Tokens)을 다루기 위한 라이브러리
+```
+
+3. 로그인 라우터에 필요한 라이브러리를 설치한다
+
+<br>
+
+```python
+# myapi/domain/user/user_router.py 수정
+from fastapi.security import OAuth2PasswordRequestForm
+from jose import jwt
+from datetime import timedelta, datetime
+from domain.user.user_crud import pwd_context
+
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24   # 토큰의 유효기간, 분 단위
+SECRET_KEY = "b09081c8a39b123bd8496675ce1136bc1ca8cae1cff42afc1a81eb75cf760a5f" # secrets로 생성해서 추가
+ALGORITHM = "HS256" # 토큰 생성시 사용하는 알고리즘
+
+# ..생략
+
+@router.post("/login", response_model=user_schema.Token)
+def login_for_access_token(form_data : OAuth2PasswordRequestForm = Depends(),
+                           db : Session = Depends(get_db)):
+    # check user and password
+    user = user_crud.get_user(db, form_data.username)   # OAuth2PasswordRequestForm으로 받아온 username으로 유저 조회
+    if not user or not pwd_context.verify(form_data.password, user.password): # 기존 유저가 없거나 패스워드가 일치하지 않으면
+        raise HTTPException(              # pwd_context.verify : 암호화되지 않은 비밀번호를 암호화하여 DB에 저장된 암호와 일치하는지 판단
+            status_code=status.HTTP_401_UNAUTHORIZED,   # 권한 없음 오류 출력
+            detail="Incorrect Username or Password",
+            headers={"WWW-Authenticate" : "Bearer"},
+        )
+    
+    # make access token
+    data = {
+        "sub" : user.username,
+        "exp" : datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    }
+    access_token = jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)    # JWT를 사용하여 액세스 토큰 생성
+                                # JWT : JSON 포맷을 이용하여 사용자에 대한 속성을 저장한느 Claim 기반의 Web Token
+
+    return {
+        "access_token" : access_token,
+        "token_type" : "bearer",
+        "username" : user.username
+    }
+```
+
+<img width="600" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/329e7830-9cdc-4882-a3eb-5b9ef2301841">
+
+4. 우선 위의 사진과 같이 secrets를 이용하여 SECRET_KEY를 생성한다
+5. 그리고 user_crud.py에 login_for_access_token 함수를 만들어서 JWT로 생성한 엑세스 토큰을 반환한다
+
+<br>
+
+### 로그인 화면 만들기
+
+```javascript
+// myapi/frontend/src/App.svelte에 아래 2줄 추가
+
+import UserLogin from "./routes/UserLogin.svelte"
+'/user-login' : UserLogin,
+```
+
+6. App.svelte에 /user-login 경로에 대한 라우터를 등록한다
+
+<br>
+
+```javascript
+// myapi/frontend/src/routes/UserLogin.svelte
+
+<script>
+    import {push} from 'svelte-spa-router'
+    import fastapi from "../lib/api"
+    import Error from "../components/Error.svelte"
+
+    let error = {detail:[]}
+    let login_username = ""
+    let login_password = ""
+
+    function login(event) {
+        event.preventDefault()
+        let url = "/api/user/login"
+        let params = {
+            username : login_username,
+            password : login_password,
+        }
+        fastapi('login', url, params,   // operation 'login'을 fastapi에 추가한 후
+            (json) => {
+                push("/")
+            },
+            (json_error) => {
+                error = json_err
+            }
+        )
+    }
+</script>
+
+<div class="container">
+    <h5 class="my-3 border-bottom pb-2">로그인</h5>
+    <Error error={error} />
+    <form method="post">
+        <div class="mb-3">
+            <label for="username">사용자 이름</label>
+            <input type="text" class="form-control" id="username" bind:value="{login_username}">
+        </div>
+        <div class="mb-3">
+            <label for="password">비밀번호</label>
+            <input type="password" class="form-control" id="password" bind:value="{login_password}">
+        </div>
+        <button type="submit" class="btn btn-primary" on:click="{login}">로그인</button>
+    </form>
+</div>
+```
+
+7. /user-login에 대한 경로 요청에 의해 이동하게 되는 로그인 화면을 svelte 파일로 만든다
+
+<br>
+
+```javascript
+// myapi/frontend/src/lib/api.js에 operation === login을 추가
+
+import qs from "qs"
+
+if (operation === 'login') { // operation이 login인 경우는
+        method = 'post'          // methpd를 post로 설정하고
+        content_type = 'application/x-www-form-urlencoded'  // 
+        body = qs.stringify(params) // params를 content_type에 맞게 변환하는 역할
+    }
+```
+
+8. 기존의 fastapi 함수를 선언한 api.js에 operation이 login일 때 다른 content_type을 설정하도록 하는 부분의 코드를 추가한다
+  - OAuth2 의 로그인을 수행할 때는 Content-Type이 application/x-www-form-urlencoded가 되어야 한다
+
+<br>
+
+### 액세스 토큰과 로그인 사용자명 저장하기
+
+- 로그인 API를 호출하여 로그인을 성공하면 액세스 토큰과 사용자명을 얻을 수 있다
+- 로그인 성공시 취득한 액세스 토큰과 사용자명을 스토어에 저장하고 내비게이션 바에도 로그인 여부를 표시할 차례이다
+
+```javascript
+// myapi/frontend/src/lib/store.js
+
+export const access_token = persist_storage("access_token", "")
+export const username = persist_storage("username", "")
+export const is_login = persist_storage("is_login", false)
+```
+
+9. store.js에 액세스 토큰, 로그인 사용자명과 관련된 변수들을 지속성 스토어로 생성하도록 수정한다
+
+<br>
+
+```
+// myapi/frontend/src/routes/UserLogin.svelte에 지속성 스토어 추가
+
+import { access_token, username, is_login } from "../lib/store"
+
+// ..생략
+
+ fastapi('login', url, params,   // operation 'login'을 fastapi에 추가한 후
+            (json) => {
+                $access_token = json.access_token
+                $username = json.username
+                $is_login = true
+                push("/")
+            },
+            (json_error) => {
+                error = json_err
+            }
+        )
+```
+
+10. UserLogin.svelte에 생성한 지속성 스토어들을 추가하고 login이 성공했을 때 호출하는 success_callback 함수에 지속성 스토어 값을 저장하도록 한다
+
+<br>
+
+```javascript
+// myapi/frontend/src/components/Naviagtion.svelte
+
+import {page, access_token, username, is_login} from "../lib/store"
+
+// .. 생략
+
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+    {#if $is_login}
+        <li class="nav-item">
+            <a use:link class="nav-link" href="/user-login" on:click={() => {
+                $access_token = ""  // 로그아웃을 클릭하면 
+                $username = ""      // 엑세스 토큰, 유저명, 로그인 여부를 초기화
+                $is_login = false
+            }}>로그아웃 ({$username})</a>
+        </li>
+    {:else}
+        <li class="nav-item">
+            <a use:link class="nav-link" href="/user-create">회원가입</a>
+        </li>
+        <li class="nav-item">
+            <a use:link class="nav-link" href="/user-login">로그인</a>
+        </li>
+    {/if}
+</ul>
+// .. 생략
+```
+
+11. 로그인한 경우에는 '로그아웃' 링크가 보이고 로그인하지 않은 경우에는 '회원가입', '로그인' 링크가 보이도록 Navigation.svelte를 수정한다
+  - '로그아웃' 링크를 누를 경우 '로그인' 페이지로 이동하게 했으나 아직은 로그아웃 기능이 제대로 작동하지 않을 것이다
+  - 추가) 로그아웃을 클릭하면 엑세스 토큰, 유저명, 로그인 여부를 초기화해서 로그아웃이 되도록 수정하였다다
+
+<br>
+
+### 결과 화면
+
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/8b94de7f-6f09-4bf5-833a-cf1617d4eaa7">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/4bc3a19d-2d00-495e-892f-b89ea9821b1d">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/d7bd56db-5fe7-4c1e-a78c-83734ef3db95">
+<img width="450" alt="image" src="https://github.com/namkidong98/FastAPI_Study/assets/113520117/b9466d4a-47af-40a3-a7b4-9b326f154c11">
+
+- 1번 사진은 UserLogin으로 구현된 로그인 창에 접속한 상태이다. 사용자 이름, 비밀번호, 로그인 버튼이 있는 것을 확인할 수 있다
+- 1번 사진에서 로그인이 되어 있지 않는 상황에서는 네비게이션 바에서 '회원가입', '로그인'이 보이는 것을 볼 수 있다
+- 2번 사진에서는 등록되어 있지 않은 회원 정보이기에 에러 메시지가 출력되는 것을 확인할 수 있다
+- 3번 사진에서는 로그인이 되면 Home 화면으로 이동하면 네비게이션 바에는 '로그아웃'만 활성화되는 것을 확인할 수 있다
+- 4번 사진에서 로그아웃을 누르면 다시 로그인 화면으로 돌아가면서 회원 정보가 초기화되어 로그아웃이 된 상황을 볼 수 있다
 
 ## 9. 글쓴이 저장하기
 
